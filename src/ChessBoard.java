@@ -12,6 +12,9 @@ import java.awt.image.BufferedImage;
 import javax.swing.*;
 import javax.swing.border.*;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 //======================================================Don't modify below===============================================================//
@@ -217,8 +220,38 @@ public class ChessBoard {
 
 
     //======================================================Implement below=================================================================//
+    // ==================== TEST only class methods ====================
+    protected ArrayList<PossiblePosition> __get_possible_pos() {
+        return possiblePos;
+    }
+    protected void __clear_possible_pos() { possiblePos.clear(); }
+    protected void __generate_custom_board(String[][] testCase) {
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                setIcon(i, j, piecePair.get(testCase[i][j]));
+            }
+        }
+    }
+
+    // Class members used exclusively during testing
+    private final Map<String, Piece> piecePair = new HashMap<String, Piece>() {{
+        put("♜", new Piece(PlayerColor.black, PieceType.rook));
+        put("♞", new Piece(PlayerColor.black, PieceType.knight));
+        put("♝", new Piece(PlayerColor.black, PieceType.bishop));
+        put("♛", new Piece(PlayerColor.black, PieceType.queen));
+        put("♚", new Piece(PlayerColor.black, PieceType.king));
+        put("♟", new Piece(PlayerColor.black, PieceType.pawn));
+        put("♖", new Piece(PlayerColor.white, PieceType.rook));
+        put("♘", new Piece(PlayerColor.white, PieceType.knight));
+        put("♗", new Piece(PlayerColor.white, PieceType.bishop));
+        put("♕", new Piece(PlayerColor.white, PieceType.queen));
+        put("♔", new Piece(PlayerColor.white, PieceType.king));
+        put("♙", new Piece(PlayerColor.white, PieceType.pawn));
+        put(" ", new Piece(PlayerColor.none, PieceType.none));
+    }};
+
     // Debug Flag
-    private static final boolean IS_DEBUG = true;
+    protected static boolean IS_DEBUG = true;
     enum MagicType { MARK, CHECK, CHECKMATE };
     private int selX, selY;
     private boolean check, checkmate, end;
@@ -226,19 +259,51 @@ public class ChessBoard {
 
 
     /**
-     * The array that stores the possible positions for the selected chess piece to move.
+     * The class that stores the possible positions for the selected chess piece to move.
      */
-    private static int[][] possiblePos = new int[8][8];
-
+    public static class PossiblePosition {
+        int x, y;
+        public PossiblePosition(int _x, int _y) {
+            x = _x;
+            y = _y;
+        }
+    }
+    private final ArrayList<PossiblePosition> possiblePos = new ArrayList<PossiblePosition>();
     private boolean isFirstMove(PlayerColor color, int axis) {
         return ((color == PlayerColor.black && axis == 1) || (color == PlayerColor.white && axis == 6));
+    }
+
+    private boolean isEmptySpace(int x, int y) {
+        return getIcon(x, y).type == PieceType.none;
+    }
+
+    private boolean isEnemyExist(int x, int y, PlayerColor color) {
+        if (color == PlayerColor.black) {
+            return getIcon(x, y).color == PlayerColor.white;
+        }
+        return getIcon(x, y).color == PlayerColor.black;
     }
 
     /**
      * Initialize the {@code possiblePos} array.
      */
     private void initializePossiblePos() {
-        possiblePos = new int[8][8];
+        possiblePos.clear();
+    }
+
+    private void generateKnightPosition(int x, int y, PlayerColor currColor) {
+        int[][] positions = {{ -2, -1 }, { -2, 1 }, { 2, -1 }, { 2, 1 },
+                       { -1, -2 }, { -1, 2 }, { 1, -2 }, { 1, 2 }};
+        for (int[] pos : positions) {
+            int posX = x + pos[0];
+            int posY = y + pos[1];
+            if (isValidPosition(posX, posY) && (isEmptySpace(posX, posY) || isEnemyExist(posX, posY, currColor)))
+                possiblePos.add(new PossiblePosition(posX, posY));
+        }
+    }
+
+    private boolean isValidPosition(int x, int y) {
+        return x >= 0 && x <= 7 && y >= 0 && y <= 7;
     }
 
     /**
@@ -246,20 +311,33 @@ public class ChessBoard {
      * @param from_x x position
      * @param from_y y position
      */
-    private void calculatePossibleMovablePosition(int from_x, int from_y) {
-        initializePossiblePos();
+    public void calculatePossibleMovablePosition(int from_x, int from_y) {
         Piece curr = chessBoardStatus[from_y][from_x];
         PieceType type = curr.type;
         PlayerColor color = curr.color;
         __LOG(ANSI_YELLOW + "Piece - %s %s\n" + ANSI_RESET, color, type);
         switch (type) {
             case pawn:
-                if (isFirstMove(color, from_x)) { // Can move forward 2 squares
-                    for (int i = 1; i <= 2; i++) {
-                        possiblePos[from_x + i][from_y] = 1;
+                if (color == PlayerColor.black) {
+                    if (from_x < 7 && isEmptySpace(from_x + 1, from_y)) {
+                        possiblePos.add(new PossiblePosition(from_x + 1, from_y));
+                        if (isFirstMove(color, from_x) && !isEnemyExist(from_x + 2, from_y, color))
+                            possiblePos.add(new PossiblePosition(from_x + 2, from_y));
                     }
+                    if (from_y > 0 && isEnemyExist(from_x + 1, from_y - 1, color))
+                        possiblePos.add(new PossiblePosition(from_x + 1, from_y - 1));
+                    if (from_y < 7 && isEnemyExist(from_x + 1, from_y + 1, color))
+                        possiblePos.add(new PossiblePosition(from_x + 1, from_y + 1));
                 } else {
-                    possiblePos[from_x + 1][from_y] = 1;
+                    if (from_x > 0 && isEmptySpace(from_x - 1, from_y)) {
+                        possiblePos.add(new PossiblePosition(from_x - 1, from_y));
+                        if (isFirstMove(color, from_x) && !isEnemyExist(from_x - 2, from_y, color))
+                            possiblePos.add(new PossiblePosition(from_x - 2, from_y));
+                    }
+                    if (from_y > 0 && isEnemyExist(from_x - 1, from_y - 1, color))
+                        possiblePos.add(new PossiblePosition(from_x - 1, from_y - 1));
+                    if (from_y < 7 && isEnemyExist(from_x - 1, from_y + 1, color))
+                        possiblePos.add(new PossiblePosition(from_x - 1, from_y + 1));
                 }
                 break;
             case king:
@@ -269,6 +347,7 @@ public class ChessBoard {
             case queen:
                 break;
             case knight:
+                generateKnightPosition(from_x, from_y, color);
                 break;
             case bishop:
                 break;
@@ -305,7 +384,7 @@ public class ChessBoard {
     private void __print_board() {
         for (int x = 0; x < 8; x++) {
             for (int y = 0; y < 8; y++) {
-                Piece curr = chessBoardStatus[y][x];
+                Piece curr = getIcon(x, y);
                 __LOG("%-9s", __simplify(curr.color, curr.type));
             }
             __LOG("\n");
@@ -313,15 +392,12 @@ public class ChessBoard {
         __LOG("\n");
     }
 
-    private void __print_possible_pos() {
+    public void __print_possible_pos() {
         __LOG(ANSI_YELLOW + "Available move pos:\n" + ANSI_RESET);
-        for (int x = 0; x < 8; x++) {
-            for (int y = 0; y < 8; y++) {
-                __LOG("%-2s", possiblePos[x][y]);
-            }
-            __LOG("\n");
+        for (PossiblePosition pos : possiblePos) {
+            __LOG("(%d, %d) ", pos.x, pos.y);
         }
-        __LOG("\n");
+        __LOG("\n\n");
     }
 
     class ButtonListener implements ActionListener{
@@ -332,13 +408,40 @@ public class ChessBoard {
             this.y = y;
         }
         public void actionPerformed(ActionEvent e) {	// Only modify here
-            __LOG(ANSI_YELLOW + "Board Clicked - x: %d, y: %d\n" + ANSI_RESET, y, x);
+            __LOG(ANSI_YELLOW + "Board Clicked - x: %d, y: %d\n" + ANSI_RESET, x, y);
+            if (isClickMarked(x, y)) {
+                movePiece(selX, selY, x, y);
+                removeAllMarks();
+                return;
+            }
+            removeAllMarks();
             // (x, y) is where the click event occurred
-            // movePiece(x, y, 2, 2);
-            if (chessBoardStatus[y][x].type != PieceType.none) {
+            if (getIcon(x, y).type != PieceType.none) {
+                selX = x;
+                selY = y;
                 calculatePossibleMovablePosition(x, y);
+                for (PossiblePosition pos : possiblePos) {
+                    markPosition(pos.x, pos.y);
+                }
             }
         }
+    }
+
+    boolean isClickMarked(int x, int y) {
+        for (PossiblePosition pos : possiblePos) {
+            if (x == pos.x && y == pos.y) return true;
+        }
+        return false;
+    }
+
+    /**
+     * Remove all markings on the board and reset {@code possiblePos[]}.
+     */
+    void removeAllMarks() {
+        for (PossiblePosition pos : possiblePos) {
+            unmarkPosition(pos.x, pos.y);
+        }
+        initializePossiblePos();
     }
 
     /**
@@ -369,7 +472,7 @@ public class ChessBoard {
 
     private void movePiece(int from_x, int from_y, int to_x, int to_y) {
         // Modify chess board status
-        Piece temp = chessBoardStatus[from_y][from_x];
+        Piece temp = getIcon(from_x, from_y);
         chessBoardStatus[to_y][to_x] = chessBoardStatus[from_y][from_x];
         chessBoardStatus[from_y][from_x] = new Piece();
         // Moving icons
