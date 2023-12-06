@@ -284,6 +284,10 @@ public class ChessBoard {
         return getIcon(x, y).color == PlayerColor.black;
     }
 
+    private boolean isExist(int x, int y, PlayerColor color) {
+        return getIcon(x, y).color == color;
+    }
+
     /**
      * Initialize the {@code possiblePos} array.
      */
@@ -291,15 +295,125 @@ public class ChessBoard {
         possiblePos.clear();
     }
 
-    private void generateKnightPosition(int x, int y, PlayerColor currColor) {
+    /**
+     * Generate possible pawn movements position.
+     * @param x
+     * @param y
+     * @param color
+     */
+    private void generatePawnPosition(int x, int y, PlayerColor color) {
+        if (color == PlayerColor.black) {
+            if (x < 7 && isEmptySpace(x + 1, y)) {
+                possiblePos.add(new PossiblePosition(x + 1, y));
+                if (isFirstMove(color, x) && !isEnemyExist(x + 2, y, color) && isEmptySpace(x + 2, y))
+                    possiblePos.add(new PossiblePosition(x + 2, y));
+            }
+            if (y > 0 && isEnemyExist(x + 1, y - 1, color))
+                possiblePos.add(new PossiblePosition(x + 1, y - 1));
+            if (y < 7 && isEnemyExist(x + 1, y + 1, color))
+                possiblePos.add(new PossiblePosition(x + 1, y + 1));
+        } else {
+            if (x > 0 && isEmptySpace(x - 1, y)) {
+                possiblePos.add(new PossiblePosition(x - 1, y));
+                if (isFirstMove(color, x) && !isEnemyExist(x - 2, y, color) && isEmptySpace(x - 2, y))
+                    possiblePos.add(new PossiblePosition(x - 2, y));
+            }
+            if (y > 0 && isEnemyExist(x - 1, y - 1, color))
+                possiblePos.add(new PossiblePosition(x - 1, y - 1));
+            if (y < 7 && isEnemyExist(x - 1, y + 1, color))
+                possiblePos.add(new PossiblePosition(x - 1, y + 1));
+        }
+    }
+
+    /**
+     * Generate possible knight movements position.
+     * @param x
+     * @param y
+     * @param color
+     */
+    private void generateKnightPosition(int x, int y, PlayerColor color) {
         int[][] positions = {{ -2, -1 }, { -2, 1 }, { 2, -1 }, { 2, 1 },
                        { -1, -2 }, { -1, 2 }, { 1, -2 }, { 1, 2 }};
         for (int[] pos : positions) {
             int posX = x + pos[0];
             int posY = y + pos[1];
-            if (isValidPosition(posX, posY) && (isEmptySpace(posX, posY) || isEnemyExist(posX, posY, currColor)))
+            if (isValidPosition(posX, posY) && (isEmptySpace(posX, posY) || isEnemyExist(posX, posY, color)))
                 possiblePos.add(new PossiblePosition(posX, posY));
         }
+    }
+
+    /**
+     * Generate possible rook movements position.
+     * @param x
+     * @param y
+     * @param color
+     */
+    private void generateRookPosition(int x, int y, PlayerColor color) {
+        for (int i = 0; i < 8; i++) {
+            if (i != x && isPathClear(x, y, i, y) && !isExist(i, y, color))
+                possiblePos.add(new PossiblePosition(i, y));
+        }
+        for (int i = 0; i < 8; i++) {
+            if (i != y && isPathClear(x, y, x, i) && !isExist(x, i, color))
+                possiblePos.add(new PossiblePosition(x, i));
+        }
+    }
+
+    /**
+     * 
+     * @param x
+     * @param y
+     * @param color
+     */
+    private void generateBishopPosition(int x, int y, PlayerColor color) {
+        for (int i = 1; i < 8; i++) {
+            if (isValidPosition(x + i, y + i) && !isExist(x + i, y + i, color)) {
+                possiblePos.add(new PossiblePosition(x + i, y + i));
+                if (isEnemyExist(x + i, y + i, color)) break;
+            }
+            else break;
+        }
+        for (int i = 1; i < 8; i++) {
+            if (isValidPosition(x + i, y - i) && !isExist(x + i, y - i, color)) {
+                possiblePos.add(new PossiblePosition(x + i, y - i));
+                if (isEnemyExist(x + i, y - i, color)) break;
+            }
+            else break;
+        }
+        for (int i = 1; i < 8; i++) {
+            if (isValidPosition(x - i, y + i) && !isExist(x - i, y + i, color)) {
+                possiblePos.add(new PossiblePosition(x - i, y + i));
+                if (isEnemyExist(x - i, y + i, color)) break;
+            }
+            else break;
+        }
+        for (int i = 1; i < 8; i++) {
+            if (isValidPosition(x - i, y - i) && !isExist(x - i, y - i, color)) {
+                possiblePos.add(new PossiblePosition(x - i, y - i));
+                if (isEnemyExist(x - i, y - i, color)) break;
+            }
+            else break;
+        }
+    }
+
+    /**
+     *
+     * @param x
+     * @param y
+     * @param color
+     */
+    private void generateQueenPosition(int x, int y, PlayerColor color) {
+        generateRookPosition(x, y, color);
+        generateBishopPosition(x, y, color);
+    }
+
+    private boolean isPathClear(int startX, int startY, int endX, int endY) {
+        int deltaX = Integer.compare(endX, startX);
+        int deltaY = Integer.compare(endY, startY);
+        for (int x = startX + deltaX, y = startY + deltaY; x != endX || y != endY; x += deltaX, y += deltaY) {
+            if (!isEmptySpace(x, y)) return false;
+        }
+        return true;
     }
 
     private boolean isValidPosition(int x, int y) {
@@ -318,38 +432,21 @@ public class ChessBoard {
         __LOG(ANSI_YELLOW + "Piece - %s %s\n" + ANSI_RESET, color, type);
         switch (type) {
             case pawn:
-                if (color == PlayerColor.black) {
-                    if (from_x < 7 && isEmptySpace(from_x + 1, from_y)) {
-                        possiblePos.add(new PossiblePosition(from_x + 1, from_y));
-                        if (isFirstMove(color, from_x) && !isEnemyExist(from_x + 2, from_y, color))
-                            possiblePos.add(new PossiblePosition(from_x + 2, from_y));
-                    }
-                    if (from_y > 0 && isEnemyExist(from_x + 1, from_y - 1, color))
-                        possiblePos.add(new PossiblePosition(from_x + 1, from_y - 1));
-                    if (from_y < 7 && isEnemyExist(from_x + 1, from_y + 1, color))
-                        possiblePos.add(new PossiblePosition(from_x + 1, from_y + 1));
-                } else {
-                    if (from_x > 0 && isEmptySpace(from_x - 1, from_y)) {
-                        possiblePos.add(new PossiblePosition(from_x - 1, from_y));
-                        if (isFirstMove(color, from_x) && !isEnemyExist(from_x - 2, from_y, color))
-                            possiblePos.add(new PossiblePosition(from_x - 2, from_y));
-                    }
-                    if (from_y > 0 && isEnemyExist(from_x - 1, from_y - 1, color))
-                        possiblePos.add(new PossiblePosition(from_x - 1, from_y - 1));
-                    if (from_y < 7 && isEnemyExist(from_x - 1, from_y + 1, color))
-                        possiblePos.add(new PossiblePosition(from_x - 1, from_y + 1));
-                }
+                generatePawnPosition(from_x, from_y, color);
                 break;
             case king:
                 break;
             case rook:
+                generateRookPosition(from_x, from_y, color);
                 break;
             case queen:
+                generateQueenPosition(from_x, from_y, color);
                 break;
             case knight:
                 generateKnightPosition(from_x, from_y, color);
                 break;
             case bishop:
+                generateBishopPosition(from_x, from_y, color);
                 break;
             default:
                 break;

@@ -1,14 +1,20 @@
+import org.jetbrains.annotations.*;
 import org.junit.jupiter.api.Assertions;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
 class ChessBoardTest {
     ChessBoard chessboard = new ChessBoard();
-    void Main() {
 
-    }
-    String __TEST_LOG(ArrayList<ChessBoard.PossiblePosition> positions) {
+    String[][] initCase = {{"♜", "♞", "♝", "♛", "♚", "♝", "♞", "♜"},
+                           {"♟", "♟", "♟", "♟", "♟", "♟", "♟", "♟"},
+                           {" ", " ", " ", " ", " ", " ", " ", " "},
+                           {" ", " ", " ", " ", " ", " ", " ", " "},
+                           {" ", " ", " ", " ", " ", " ", " ", " "},
+                           {" ", " ", " ", " ", " ", " ", " ", " "},
+                           {"♙", "♙", "♙", "♙", "♙", "♙", "♙", "♙"},
+                           {"♖", "♘", "♗", "♕", "♔", "♗", "♘", "♖"}};
+
+    String __TEST_LOG(@NotNull ArrayList<ChessBoard.PossiblePosition> positions) {
         StringBuilder res = new StringBuilder();
         for (ChessBoard.PossiblePosition pos : positions) {
             res.append(String.format("(%d, %d) ", pos.x, pos.y));
@@ -17,10 +23,9 @@ class ChessBoardTest {
     }
 
     @org.junit.jupiter.api.Test
-    void calculatePossibleMovablePosition() {
-        // ChessBoard chessboard = new ChessBoard();
+    void calculatePawnsPosition() {
         ChessBoard.IS_DEBUG = false;
-        chessboard.initiateBoard();
+        chessboard.__generate_custom_board(initCase);
 
         chessboard.calculatePossibleMovablePosition(1, 0);
         Assertions.assertEquals("(2, 0) (3, 0)", __TEST_LOG(chessboard.__get_possible_pos()));
@@ -46,6 +51,7 @@ class ChessBoardTest {
                             { " ", " ", " ", " ", " ", " ", " ", " " },
                             { "♙", " ", "♙", "♙", "♙", "♙", "♙", "♙" },
                             { "♖", "♘", "♗", "♕", "♔", "♗", "♘", "♖"}};
+
         chessboard.__generate_custom_board(case1);
         chessboard.calculatePossibleMovablePosition(3, 1);
         Assertions.assertEquals("", __TEST_LOG(chessboard.__get_possible_pos()));
@@ -63,17 +69,297 @@ class ChessBoardTest {
                             { " ", " ", " ", " ", " ", " ", " ", " " },
                             { "♙", " ", "♙", "♙", "♙", "♙", "♙", "♙" },
                             { "♖", "♘", "♗", "♕", "♔", "♗", "♘", "♖"}};
+
         chessboard.__generate_custom_board(case2);
         chessboard.calculatePossibleMovablePosition(4, 1);
         Assertions.assertEquals("(3, 1) (3, 0) (3, 2)", __TEST_LOG(chessboard.__get_possible_pos()));
+        chessboard.__clear_possible_pos();
+
+        String[][] case3 = {{ " ", " ", " ", " ", " ", " ", " ", " " },
+                            { " ", " ", "♟", " ", " ", " ", " ", " " },
+                            { " ", " ", " ", " ", " ", " ", " ", " " },
+                            { " ", "♙", "♜", "♙", " ", " ", " ", " " },
+                            { " ", " ", "♙", " ", " ", " ", " ", " " },
+                            { " ", " ", " ", " ", " ", " ", " ", " " },
+                            { " ", " ", " ", " ", " ", " ", " ", " " },
+                            { " ", " ", " ", " ", " ", " ", " ", " " }};
+        chessboard.__generate_custom_board(case3);
+
+        chessboard.calculatePossibleMovablePosition(1, 2);
+        Assertions.assertEquals("(2, 2)", __TEST_LOG(chessboard.__get_possible_pos()));
         chessboard.__clear_possible_pos();
     }
 
     @org.junit.jupiter.api.Test
     void calculateKnightsPosition() {
         ChessBoard.IS_DEBUG = false;
-        chessboard.initiateBoard();
+        chessboard.__generate_custom_board(initCase);
 
-        // TODO: Knights 움직임 테스트 작성
+        chessboard.calculatePossibleMovablePosition(0, 1);
+        Assertions.assertEquals("(2, 0) (2, 2)", __TEST_LOG(chessboard.__get_possible_pos()));
+        chessboard.__clear_possible_pos();
+
+        chessboard.calculatePossibleMovablePosition(0, 6);
+        Assertions.assertEquals("(2, 5) (2, 7)", __TEST_LOG(chessboard.__get_possible_pos()));
+        chessboard.__clear_possible_pos();
+
+        chessboard.calculatePossibleMovablePosition(7, 1);
+        Assertions.assertEquals("(5, 0) (5, 2)", __TEST_LOG(chessboard.__get_possible_pos()));
+        chessboard.__clear_possible_pos();
+
+        chessboard.calculatePossibleMovablePosition(7, 6);
+        Assertions.assertEquals("(5, 5) (5, 7)", __TEST_LOG(chessboard.__get_possible_pos()));
+        chessboard.__clear_possible_pos();
+
+        String[][] case2 = {{"♜", "♞", "♝", "♛", "♚", "♝", " ", "♜"},
+                            {"♟", "♟", "♟", "♟", " ", "♟", " ", "♟"},
+                            {" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", "♞", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", "♘", " ", " ", " ", "♙", " "},
+                            {"♙", "♙", "♙", "♙", "♙", "♙", " ", "♙"},
+                            {"♖", " ", "♗", "♕", "♔", "♗", "♘", "♖"}};
+        chessboard.__generate_custom_board(case2);
+
+        chessboard.calculatePossibleMovablePosition(5, 2);
+        Assertions.assertEquals(
+                "(3, 1) (3, 3) (7, 1) (4, 0) (4, 4)",
+                __TEST_LOG(chessboard.__get_possible_pos()));
+        chessboard.__clear_possible_pos();
+
+        chessboard.calculatePossibleMovablePosition(3, 5);
+        Assertions.assertEquals(
+                "(1, 4) (1, 6) (5, 4) (5, 6) " +
+                         "(2, 3) (2, 7) (4, 3) (4, 7)",
+                __TEST_LOG(chessboard.__get_possible_pos()));
+        chessboard.__clear_possible_pos();
+    }
+
+    @org.junit.jupiter.api.Test
+    void calculateRookPosition() {
+        ChessBoard.IS_DEBUG = false;
+        chessboard.__generate_custom_board(initCase);
+
+        chessboard.calculatePossibleMovablePosition(0, 0);
+        chessboard.calculatePossibleMovablePosition(0, 7);
+        chessboard.calculatePossibleMovablePosition(7, 0);
+        chessboard.calculatePossibleMovablePosition(7, 7);
+        Assertions.assertEquals("", __TEST_LOG(chessboard.__get_possible_pos()));
+        chessboard.__clear_possible_pos();
+
+        //
+        String[][] case2 = {{"♜", "♞", "♝", "♛", "♚", "♝", "♞", " "},
+                            {"♟", "♟", "♟", "♟", "♟", "♟", "♟", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", "♜", " ", " ", " "},
+                            {"♖", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "},
+                            {"♙", "♙", "♙", "♙", "♙", "♙", "♙", "♙"},
+                            {" ", "♘", "♗", "♕", "♔", "♗", "♘", "♖"}};
+        chessboard.__generate_custom_board(case2);
+
+        chessboard.calculatePossibleMovablePosition(4, 0);
+        Assertions.assertEquals(
+                "(1, 0) (2, 0) (3, 0) (5, 0) " +
+                         "(4, 1) (4, 2) (4, 3) (4, 4) " +
+                         "(4, 5) (4, 6) (4, 7)",
+                __TEST_LOG(chessboard.__get_possible_pos()));
+        chessboard.__clear_possible_pos();
+
+        chessboard.calculatePossibleMovablePosition(3, 4);
+        Assertions.assertEquals(
+                "(2, 4) (4, 4) (5, 4) (6, 4) " +
+                         "(3, 0) (3, 1) (3, 2) (3, 3) " +
+                         "(3, 5) (3, 6) (3, 7)",
+                __TEST_LOG(chessboard.__get_possible_pos()));
+        chessboard.__clear_possible_pos();
+
+        //
+        String[][] case3 = {{" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", "♙", " ", " ", " "},
+                            {" ", " ", " ", "♙", "♜", "♙", " ", " "},
+                            {" ", " ", " ", " ", "♙", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "}};
+        chessboard.__generate_custom_board(case3);
+        chessboard.calculatePossibleMovablePosition(3, 4);
+        Assertions.assertEquals(
+                "(2, 4) (4, 4) (3, 3) (3, 5)",
+                __TEST_LOG(chessboard.__get_possible_pos())
+        );
+        chessboard.__clear_possible_pos();
+
+        //
+        String[][] case4 = {{" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", "♟", " ", " ", " "},
+                            {" ", " ", " ", "♟", "♜", "♟", " ", " "},
+                            {" ", " ", " ", " ", "♟", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "}};
+        chessboard.__generate_custom_board(case4);
+        chessboard.calculatePossibleMovablePosition(3, 4);
+        Assertions.assertEquals(
+                "",
+                __TEST_LOG(chessboard.__get_possible_pos())
+        );
+        chessboard.__clear_possible_pos();
+
+        //
+        String[][] case5 = {{" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", "♜", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "}};
+        chessboard.__generate_custom_board(case5);
+        chessboard.calculatePossibleMovablePosition(3, 3);
+        Assertions.assertEquals(
+                "(0, 3) (1, 3) (2, 3) (4, 3) (5, 3) (6, 3) (7, 3) " +
+                        "(3, 0) (3, 1) (3, 2) (3, 4) (3, 5) (3, 6) (3, 7)",
+                __TEST_LOG(chessboard.__get_possible_pos())
+        );
+        chessboard.__clear_possible_pos();
+    }
+
+    @org.junit.jupiter.api.Test
+    void calculateBishopPosition() {
+        ChessBoard.IS_DEBUG = false;
+        chessboard.__generate_custom_board(initCase);
+
+        chessboard.calculatePossibleMovablePosition(0, 2);
+        chessboard.calculatePossibleMovablePosition(0, 5);
+        chessboard.calculatePossibleMovablePosition(7, 2);
+        chessboard.calculatePossibleMovablePosition(7, 5);
+        Assertions.assertEquals("", __TEST_LOG(chessboard.__get_possible_pos()));
+        chessboard.__clear_possible_pos();
+
+        //
+        String[][] case1 = {{" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", "♝", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "}};
+        chessboard.__generate_custom_board(case1);
+
+        chessboard.calculatePossibleMovablePosition(3, 3);
+        Assertions.assertEquals(
+                "(4, 4) (5, 5) (6, 6) (7, 7) " +
+                         "(4, 2) (5, 1) (6, 0) (2, 4) " +
+                         "(1, 5) (0, 6) (2, 2) (1, 1) " +
+                         "(0, 0)",
+                __TEST_LOG(chessboard.__get_possible_pos())
+        );
+        chessboard.__clear_possible_pos();
+
+        String[][] case2 = {{" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", "♗", " ", "♗", " ", " ", " "},
+                            {" ", " ", " ", "♝", " ", " ", " ", " "},
+                            {" ", " ", "♗", " ", "♗", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "}};
+        chessboard.__generate_custom_board(case2);
+
+        chessboard.calculatePossibleMovablePosition(3, 3);
+        Assertions.assertEquals(
+                "(4, 4) (4, 2) (2, 4) (2, 2)",
+                __TEST_LOG(chessboard.__get_possible_pos())
+        );
+        chessboard.__clear_possible_pos();
+
+        String[][] case3 = {{" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", "♟", " ", "♟", " ", " ", " "},
+                            {" ", " ", " ", "♝", " ", " ", " ", " "},
+                            {" ", " ", "♟", " ", "♟", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "}};
+        chessboard.__generate_custom_board(case3);
+
+        chessboard.calculatePossibleMovablePosition(3, 3);
+        Assertions.assertEquals("", __TEST_LOG(chessboard.__get_possible_pos()));
+        chessboard.__clear_possible_pos();
+    }
+
+    @org.junit.jupiter.api.Test
+    void calculateQueenPosition() {
+        ChessBoard.IS_DEBUG = false;
+        chessboard.__generate_custom_board(initCase);
+
+        chessboard.calculatePossibleMovablePosition(7, 3);
+        chessboard.calculatePossibleMovablePosition(0, 3);
+        Assertions.assertEquals("", __TEST_LOG(chessboard.__get_possible_pos()));
+        chessboard.__clear_possible_pos();
+
+        String[][] case1 = {{" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", "♕", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "}};
+        chessboard.__generate_custom_board(case1);
+
+        chessboard.calculatePossibleMovablePosition(3, 3);
+        Assertions.assertEquals(
+                "(0, 3) (1, 3) (2, 3) (4, 3) (5, 3) (6, 3) (7, 3) " +
+                         "(3, 0) (3, 1) (3, 2) (3, 4) (3, 5) (3, 6) (3, 7) " +
+                         "(4, 4) (5, 5) (6, 6) (7, 7) " +
+                         "(4, 2) (5, 1) (6, 0) " +
+                         "(2, 4) (1, 5) (0, 6) " +
+                         "(2, 2) (1, 1) (0, 0)",
+                __TEST_LOG(chessboard.__get_possible_pos())
+        );
+        chessboard.__clear_possible_pos();
+
+        String[][] case2 = {{" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", "♙", " ", " ", " ", " "},
+                            {" ", " ", "♙", "♕", "♙", " ", " ", " "},
+                            {" ", " ", " ", "♙", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "}};
+        chessboard.__generate_custom_board(case2);
+
+        chessboard.calculatePossibleMovablePosition(3, 3);
+        Assertions.assertEquals(
+                "(4, 4) (5, 5) (6, 6) (7, 7) " +
+                        "(4, 2) (5, 1) (6, 0) (2, 4) " +
+                        "(1, 5) (0, 6) (2, 2) (1, 1) " +
+                        "(0, 0)",
+                __TEST_LOG(chessboard.__get_possible_pos())
+        );
+        chessboard.__clear_possible_pos();
+
+        String[][] case3 = {{" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", "♙", " ", "♙", " ", " ", " "},
+                            {" ", " ", " ", "♕", " ", " ", " ", " "},
+                            {" ", " ", "♙", " ", "♙", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "}};
+        chessboard.__generate_custom_board(case3);
+
+        chessboard.calculatePossibleMovablePosition(3, 3);
+        Assertions.assertEquals(
+                "(0, 3) (1, 3) (2, 3) (4, 3) (5, 3) (6, 3) (7, 3) " +
+                         "(3, 0) (3, 1) (3, 2) (3, 4) (3, 5) (3, 6) (3, 7)",
+                __TEST_LOG(chessboard.__get_possible_pos())
+        );
+        chessboard.__clear_possible_pos();
     }
 }
