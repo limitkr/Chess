@@ -407,6 +407,17 @@ public class ChessBoard {
         generateBishopPosition(x, y, color);
     }
 
+    private void generateKingPosition(int x, int y, PlayerColor color) {
+        int[][] positions = {{ -1, -1 }, { -1, 0 }, { -1, 1 }, { 0, 1 },
+                             { 1, 1 }, { 1, 0 }, { 1, -1 }, { 0, -1 }};
+        for (int[] pos : positions) {
+            int posX = x + pos[0];
+            int posY = y + pos[1];
+            if (isValidPosition(posX, posY) && (isEmptySpace(posX, posY) || isEnemyExist(posX, posY, color)))
+                possiblePos.add(new PossiblePosition(posX, posY));
+        }
+    }
+
     private boolean isPathClear(int startX, int startY, int endX, int endY) {
         int deltaX = Integer.compare(endX, startX);
         int deltaY = Integer.compare(endY, startY);
@@ -435,6 +446,7 @@ public class ChessBoard {
                 generatePawnPosition(from_x, from_y, color);
                 break;
             case king:
+                generateKingPosition(from_x, from_y, color);
                 break;
             case rook:
                 generateRookPosition(from_x, from_y, color);
@@ -547,6 +559,17 @@ public class ChessBoard {
     void onInitiateBoard(){
         __LOG(ANSI_GREEN + "===== GAME START =====\n\n" + ANSI_RESET);
         __print_board();
+        /**
+        String[][] case1 = {{" ", " ", " ", " ", "♚", " ", " ", " "},
+                {" ", " ", " ", " ", " ", " ", " ", " "},
+                {" ", " ", " ", " ", " ", " ", " ", " "},
+                {" ", " ", " ", " ", " ", " ", " ", " "},
+                {" ", " ", " ", " ", " ", " ", " ", " "},
+                {" ", " ", " ", " ", " ", " ", " ", " "},
+                {" ", " ", " ", " ", " ", " ", " ", " "},
+                {" ", " ", " ", " ", "♔", " ", " ", " "}};
+        __generate_custom_board(case1);
+         */
         initilizeTurn();
     }
 
