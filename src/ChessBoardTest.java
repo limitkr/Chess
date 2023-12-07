@@ -445,4 +445,23 @@ class ChessBoardTest {
                 __TEST_LOG(chessboard.__get_possible_pos())
         );
     }
+
+    @org.junit.jupiter.api.Test
+    void checkmateTest() {
+        ChessBoard.IS_DEBUG = false;
+        String[][] case1 = {{" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", "♛", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", "♛", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", "♔", " ", " ", " "}};
+        chessboard.__generate_custom_board(case1);
+        chessboard.calculateCheck(2, 4, PlayerColor.white);
+        Assertions.assertTrue(chessboard.__get_check_status());
+
+        chessboard.calculateCheck(5, 3, PlayerColor.white);
+        Assertions.assertFalse(chessboard.__get_check_status());
+    }
 }

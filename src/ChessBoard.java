@@ -232,6 +232,9 @@ public class ChessBoard {
             }
         }
     }
+    protected boolean __get_check_status() {
+        return check;
+    }
 
     // Class members used exclusively during testing
     private final Map<String, Piece> piecePair = new HashMap<String, Piece>() {{
@@ -296,10 +299,10 @@ public class ChessBoard {
     }
 
     /**
-     * Generate possible pawn movements position.
-     * @param x
-     * @param y
-     * @param color
+     * A method to calculate the positions where a Pawn can move
+     * @param x x coordinate
+     * @param y y coordinate
+     * @param color current player color
      */
     private void generatePawnPosition(int x, int y, PlayerColor color) {
         if (color == PlayerColor.black) {
@@ -326,46 +329,76 @@ public class ChessBoard {
     }
 
     /**
-     * Generate possible knight movements position.
-     * @param x
-     * @param y
-     * @param color
+     * A method to calculate the positions where a Knight can move
+     * @param x x coordinate
+     * @param y y coordinate
+     * @param color current player color
      */
     private void generateKnightPosition(int x, int y, PlayerColor color) {
         int[][] positions = {{ -2, -1 }, { -2, 1 }, { 2, -1 }, { 2, 1 },
                        { -1, -2 }, { -1, 2 }, { 1, -2 }, { 1, 2 }};
-        for (int[] pos : positions) {
+        _generatePositions(x, y, color, positions);
+    }
+
+    /**
+     * A method to calculate the positions where a Rook can move
+     * @param x x coordinate
+     * @param y y coordinate
+     * @param color current player color
+     */
+    private void generateRookPosition(int x, int y, PlayerColor color) {
+        _generateVerticalHorizontalPosition(x, y, color);
+    }
+
+    /**
+     * A method to calculate the positions where a Bishop can move
+     * @param x x coordinate
+     * @param y y coordinate
+     * @param color current player color
+     */
+    private void generateBishopPosition(int x, int y, PlayerColor color) {
+        _generateDiagonalPosition(x, y, color);
+    }
+
+    /**
+     * A method to calculate the positions where a Queen can move
+     * @param x x coordinate
+     * @param y y coordinate
+     * @param color current player color
+     */
+    private void generateQueenPosition(int x, int y, PlayerColor color) {
+        _generateVerticalHorizontalPosition(x, y, color);
+        _generateDiagonalPosition(x, y, color);
+    }
+
+    /**
+     * A method to calculate the positions where a King can move
+     * @param x x coordinate
+     * @param y y coordinate
+     * @param color current player color
+     */
+    private void generateKingPosition(int x, int y, PlayerColor color) {
+        int[][] positions = {{ -1, -1 }, { -1, 0 }, { -1, 1 }, { 0, 1 },
+                             { 1, 1 }, { 1, 0 }, { 1, -1 }, { 0, -1 }};
+        _generatePositions(x, y, color, positions);
+    }
+
+    /**
+     * It calculates the movable positions based on predefined coordinate values.
+     * @param x x coordinate
+     * @param y y coordinate
+     * @param color current player color
+     * @param predefinedPositions Predefined movement positions of a specific piece
+     */
+    private void _generatePositions(int x, int y, PlayerColor color, int[][] predefinedPositions) {
+        for (int[] pos : predefinedPositions) {
             int posX = x + pos[0];
             int posY = y + pos[1];
             if (isValidPosition(posX, posY) && (isEmptySpace(posX, posY) || isEnemyExist(posX, posY, color)))
                 possiblePos.add(new PossiblePosition(posX, posY));
         }
     }
-
-    /**
-     * Generate possible rook movements position.
-     * @param x
-     * @param y
-     * @param color
-     */
-    private void generateRookPosition(int x, int y, PlayerColor color) {
-        for (int i = 0; i < 8; i++) {
-            if (i != x && isPathClear(x, y, i, y) && !isExist(i, y, color))
-                possiblePos.add(new PossiblePosition(i, y));
-        }
-        for (int i = 0; i < 8; i++) {
-            if (i != y && isPathClear(x, y, x, i) && !isExist(x, i, color))
-                possiblePos.add(new PossiblePosition(x, i));
-        }
-    }
-
-    /**
-     * 
-     * @param x
-     * @param y
-     * @param color
-     */
-    private void generateBishopPosition(int x, int y, PlayerColor color) {
+    private void _generateDiagonalPosition(int x, int y, PlayerColor color) {
         for (int i = 1; i < 8; i++) {
             if (isValidPosition(x + i, y + i) && !isExist(x + i, y + i, color)) {
                 possiblePos.add(new PossiblePosition(x + i, y + i));
@@ -395,26 +428,14 @@ public class ChessBoard {
             else break;
         }
     }
-
-    /**
-     *
-     * @param x
-     * @param y
-     * @param color
-     */
-    private void generateQueenPosition(int x, int y, PlayerColor color) {
-        generateRookPosition(x, y, color);
-        generateBishopPosition(x, y, color);
-    }
-
-    private void generateKingPosition(int x, int y, PlayerColor color) {
-        int[][] positions = {{ -1, -1 }, { -1, 0 }, { -1, 1 }, { 0, 1 },
-                             { 1, 1 }, { 1, 0 }, { 1, -1 }, { 0, -1 }};
-        for (int[] pos : positions) {
-            int posX = x + pos[0];
-            int posY = y + pos[1];
-            if (isValidPosition(posX, posY) && (isEmptySpace(posX, posY) || isEnemyExist(posX, posY, color)))
-                possiblePos.add(new PossiblePosition(posX, posY));
+    private void _generateVerticalHorizontalPosition(int x, int y, PlayerColor color) {
+        for (int i = 0; i < 8; i++) {
+            if (i != x && isPathClear(x, y, i, y) && !isExist(i, y, color))
+                possiblePos.add(new PossiblePosition(i, y));
+        }
+        for (int i = 0; i < 8; i++) {
+            if (i != y && isPathClear(x, y, x, i) && !isExist(x, i, color))
+                possiblePos.add(new PossiblePosition(x, i));
         }
     }
 
@@ -518,14 +539,23 @@ public class ChessBoard {
         }
         public void actionPerformed(ActionEvent e) {	// Only modify here
             __LOG(ANSI_YELLOW + "Board Clicked - x: %d, y: %d\n" + ANSI_RESET, x, y);
+
             if (isClickMarked(x, y)) {
                 movePiece(selX, selY, x, y);
                 removeAllMarks();
+                swapTurn();
+                calculateCheck(x, y, TURN);
+                if (check) {
+                    String turn = TURN == PlayerColor.black ? "BLACK" : "WHITE";
+                    setStatus(turn + "'s TURN / CHECK");
+                }
                 return;
             }
+
             removeAllMarks();
+
             // (x, y) is where the click event occurred
-            if (getIcon(x, y).type != PieceType.none) {
+            if (getIcon(x, y).type != PieceType.none && TURN == getIcon(x, y).color) {
                 selX = x;
                 selY = y;
                 calculatePossibleMovablePosition(x, y);
@@ -534,6 +564,28 @@ public class ChessBoard {
                 }
             }
         }
+    }
+
+    void calculateCheck(int x, int y, PlayerColor currentTurn) {
+        initializePossiblePos();
+        calculatePossibleMovablePosition(x, y);
+        for (PossiblePosition pos : possiblePos) {
+            Piece curr = getIcon(pos.x, pos.y);
+            if (curr.type == PieceType.king && curr.color == currentTurn) {
+                check = true;
+                initializePossiblePos();
+                return;
+            }
+        }
+        check = false;
+        initializePossiblePos();
+    }
+
+    /**
+     *
+     */
+    void calculateCheckmate() {
+
     }
 
     boolean isClickMarked(int x, int y) {
@@ -559,21 +611,10 @@ public class ChessBoard {
     void onInitiateBoard(){
         __LOG(ANSI_GREEN + "===== GAME START =====\n\n" + ANSI_RESET);
         __print_board();
-        /**
-        String[][] case1 = {{" ", " ", " ", " ", "♚", " ", " ", " "},
-                {" ", " ", " ", " ", " ", " ", " ", " "},
-                {" ", " ", " ", " ", " ", " ", " ", " "},
-                {" ", " ", " ", " ", " ", " ", " ", " "},
-                {" ", " ", " ", " ", " ", " ", " ", " "},
-                {" ", " ", " ", " ", " ", " ", " ", " "},
-                {" ", " ", " ", " ", " ", " ", " ", " "},
-                {" ", " ", " ", " ", "♔", " ", " ", " "}};
-        __generate_custom_board(case1);
-         */
-        initilizeTurn();
+        initializeTurn();
     }
 
-    private void initilizeTurn() {
+    private void initializeTurn() {
         TURN = PlayerColor.black;
         setStatus("BLACK's TURN");
     }
@@ -586,7 +627,7 @@ public class ChessBoard {
             TURN = PlayerColor.white;
             setStatus("WHITE's TURN");
         } else {
-            initilizeTurn();
+            initializeTurn();
         }
     }
 
@@ -599,6 +640,4 @@ public class ChessBoard {
         setIcon(to_x, to_y, temp);
         setIcon(from_x, from_y, new Piece());
     }
-
-
 }
