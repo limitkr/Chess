@@ -236,8 +236,12 @@ public class ChessBoard {
         return check;
     }
 
+    protected boolean __get_end_status() {
+        return end;
+    }
+
     // Class members used exclusively during testing
-    private final Map<String, Piece> piecePair = new HashMap<String, Piece>() {{
+    private final Map<String, Piece> piecePair = new HashMap<>() {{
         put("♜", new Piece(PlayerColor.black, PieceType.rook));
         put("♞", new Piece(PlayerColor.black, PieceType.knight));
         put("♝", new Piece(PlayerColor.black, PieceType.bishop));
@@ -506,11 +510,13 @@ public class ChessBoard {
     private void __LOG(final String format, Object... args) {
         if (IS_DEBUG) System.out.printf(format, args);
     }
+
     private String __simplify(PlayerColor color, PieceType type) {
         if (Objects.equals(type.toString(), "none")) return "X";
         String C = color.toString().substring(0, 1).toUpperCase();
         return C + "-" + type;
     }
+
     private void __print_board() {
         for (int x = 0; x < 8; x++) {
             for (int y = 0; y < 8; y++) {
@@ -538,6 +544,7 @@ public class ChessBoard {
             this.y = y;
         }
         public void actionPerformed(ActionEvent e) {	// Only modify here
+            if (end) return;
             __LOG(ANSI_YELLOW + "Board Clicked - x: %d, y: %d\n" + ANSI_RESET, x, y);
 
             if (isClickMarked(x, y)) {
@@ -546,8 +553,8 @@ public class ChessBoard {
                 swapTurn();
                 calculateCheck(x, y, TURN);
                 if (check) {
-                    String turn = TURN == PlayerColor.black ? "BLACK" : "WHITE";
-                    setStatus(turn + "'s TURN / CHECK");
+                    String currentTurn = TURN == PlayerColor.black ? "BLACK" : "WHITE";
+                    setStatus(currentTurn + "'s TURN / CHECK");
                 }
                 return;
             }
@@ -555,7 +562,7 @@ public class ChessBoard {
             removeAllMarks();
 
             // (x, y) is where the click event occurred
-            if (getIcon(x, y).type != PieceType.none && TURN == getIcon(x, y).color) {
+            if (!isEmptySpace(x, y) && TURN == getIcon(x, y).color) {
                 selX = x;
                 selY = y;
                 calculatePossibleMovablePosition(x, y);
@@ -584,9 +591,7 @@ public class ChessBoard {
     /**
      *
      */
-    void calculateCheckmate() {
-
-    }
+    void calculateCheckmate() {}
 
     boolean isClickMarked(int x, int y) {
         for (PossiblePosition pos : possiblePos) {
@@ -622,7 +627,7 @@ public class ChessBoard {
     /**
      * Swap user's turn and display messages according current state
      */
-    private void swapTurn() {
+    protected void swapTurn() {
         if (TURN == PlayerColor.black) {
             TURN = PlayerColor.white;
             setStatus("WHITE's TURN");
@@ -631,9 +636,14 @@ public class ChessBoard {
         }
     }
 
-    private void movePiece(int from_x, int from_y, int to_x, int to_y) {
+    protected void movePiece(int from_x, int from_y, int to_x, int to_y) {
         // Modify chess board status
         Piece temp = getIcon(from_x, from_y);
+        if (getIcon(to_x, to_y).type == PieceType.king && getIcon(to_x, to_y).color != TURN) {
+            end = true;
+            String currentTurn = TURN == PlayerColor.black ? "BLACK" : "WHITE";
+            setStatus(currentTurn + "WIN!");
+        }
         chessBoardStatus[to_y][to_x] = chessBoardStatus[from_y][from_x];
         chessBoardStatus[from_y][from_x] = new Piece();
         // Moving icons
