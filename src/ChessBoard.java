@@ -1,5 +1,5 @@
 /**
- * Computer Programming 2023 Fall
+ * Computer Programming 2023 Fall - Final Project
  * - Tiny chess game
 
  * Name: YongIn Kim
@@ -220,10 +220,12 @@ public class ChessBoard {
 
 
     //======================================================Implement below=================================================================//
-    // ==================== TEST only class methods ====================
-    protected ArrayList<PossiblePosition> __get_possible_pos() {
-        return possiblePos;
-    }
+
+    // ================================================ Testing Only ============================================================
+    // The following methods and members are for functional testing purposes only and are not used in the actual
+    // execution of a chess game. In other words, they are not used at all in the ChessBoard.java file submitted
+    // as an assignment.
+    protected ArrayList<PossiblePosition> __get_possible_pos() { return possiblePos; }
     protected void __clear_possible_pos() { possiblePos.clear(); }
     protected void __generate_custom_board(String[][] testCase) {
         for (int i = 0; i < 8; i++) {
@@ -232,12 +234,9 @@ public class ChessBoard {
             }
         }
     }
-    protected boolean __get_check_status() {
-        return check;
-    }
-
-    // Class members used exclusively during testing
-    private final Map<String, Piece> piecePair = new HashMap<String, Piece>() {{
+    protected boolean __get_check_status() { return check; }
+    protected boolean __get_end_status() { return end; }
+    private final Map<String, Piece> piecePair = new HashMap<>() {{
         put("♜", new Piece(PlayerColor.black, PieceType.rook));
         put("♞", new Piece(PlayerColor.black, PieceType.knight));
         put("♝", new Piece(PlayerColor.black, PieceType.bishop));
@@ -253,33 +252,121 @@ public class ChessBoard {
         put(" ", new Piece(PlayerColor.none, PieceType.none));
     }};
 
-    // Debug Flag
-    protected static boolean IS_DEBUG = true;
-    enum MagicType { MARK, CHECK, CHECKMATE };
-    private int selX, selY;
-    private boolean check, checkmate, end;
-    private PlayerColor TURN;
+    /**
+     * Debugging flag.
+     * When set to {@code true}, it prints various development-related information
+     * to the console during game execution.
+     */
+    protected static boolean IS_DEBUG = false;
 
+    // Members used for specifying colors when printing to the console
+    private static final String ANSI_RESET = "\u001B[0m";
+    private static final String ANSI_YELLOW = "\u001B[33m";
+    private static final String ANSI_GREEN = "\u001B[32m";
+
+    /**
+     * Logging a messages to the console if the {@code IS_DEBUG} flag
+     * is defined as {@code true}.
+     * @param format
+     *        Equivalent to the {@code format} parameter of {@code System.out.printf}.
+     * @param args
+     *        Equivalent to the {@code args} parameter of {@code System.out.printf}.
+     */
+    private
+      void __LOG(final String format, Object... args) { if (IS_DEBUG) System.out.printf(format, args); }
+
+    private String __simplify(PlayerColor color, PieceType type) {
+        if (Objects.equals(type.toString(), "none")) return "X";
+        String C = color.toString().substring(0, 1).toUpperCase();
+        return C + "-" + type;
+    }
+
+    private void __print_board() {
+        for (int x = 0; x < 8; x++) {
+            for (int y = 0; y < 8; y++) {
+                Piece curr = getIcon(x, y);
+                __LOG("%-9s", __simplify(curr.color, curr.type));
+            }
+            __LOG("\n");
+        }
+        __LOG("\n");
+    }
+
+    public void __print_possible_pos() {
+        __LOG(ANSI_YELLOW + "Available move pos:\n" + ANSI_RESET);
+        for (PossiblePosition pos : possiblePos) {
+            __LOG("(%d, %d) ", pos.x, pos.y);
+        }
+        __LOG("\n\n");
+    }
+
+    // =============================================== End =============================================================
+
+    // enum MagicType { MARK, CHECK, CHECKMATE };
+    private int selX, selY;
+    private boolean check, end; // checkmate,
+
+    /**
+     * Store the status  of the current turn.
+     */
+    private PlayerColor TURN;
 
     /**
      * The class that stores the possible positions for the selected chess piece to move.
      */
-    public static class PossiblePosition {
+    protected static final class PossiblePosition {
         int x, y;
         public PossiblePosition(int _x, int _y) {
             x = _x;
             y = _y;
         }
     }
-    private final ArrayList<PossiblePosition> possiblePos = new ArrayList<PossiblePosition>();
-    private boolean isFirstMove(PlayerColor color, int axis) {
-        return ((color == PlayerColor.black && axis == 1) || (color == PlayerColor.white && axis == 6));
+    private final ArrayList<PossiblePosition> possiblePos = new ArrayList<>();
+
+    /**
+     * Checks if the specified space on the chessboard is empty.
+     *
+     * @param x The x-coordinate of the space to check.
+     * @param y The y-coordinate of the space to check.
+     * @return True if the space is empty, false otherwise.
+     */
+    private
+      boolean isEmptySpace(int x, int y) { return getIcon(x, y).type == PieceType.none; }
+
+    /**
+     * A function that checks if the piece at the given coordinates is an opponent's piece.
+     *
+     * @param x The x-coordinate of the piece.
+     * @param y The y-coordinate of the piece.
+     * @param color The player's color.
+     * @return True if the piece at the given coordinates is not the player's color.
+     */
+    private
+      boolean isOpponentPiece(int x, int y, PlayerColor color) { return getIcon(x, y).color != color; }
+
+    /**
+     * Initialize the {@code possiblePos} array.
+     */
+    private void initializePossiblePos() { possiblePos.clear(); }
+
+    /**
+     * A method that checks if a pawn has never moved.
+     *
+     * @param color The player's color.
+     * @param xPos The x-coordinate of the piece.
+     */
+    private boolean isFirstMove(PlayerColor color, int xPos) {
+        return ((color == PlayerColor.black && xPos == 1) || (color == PlayerColor.white && xPos == 6));
     }
 
-    private boolean isEmptySpace(int x, int y) {
-        return getIcon(x, y).type == PieceType.none;
-    }
-
+    /**
+     * Checks if the specified space on the chessboard contains an enemy piece.
+     *
+     * @param x The x-coordinate of the space to check.
+     * @param y The y-coordinate of the space to check.
+     * @param color The color of the enemy player.
+     * @return True if the space contains an enemy piece, false otherwise.
+     */
     private boolean isEnemyExist(int x, int y, PlayerColor color) {
         if (color == PlayerColor.black) {
             return getIcon(x, y).color == PlayerColor.white;
@@ -287,24 +374,15 @@ public class ChessBoard {
         return getIcon(x, y).color == PlayerColor.black;
     }
 
-    private boolean isExist(int x, int y, PlayerColor color) {
-        return getIcon(x, y).color == color;
-    }
-
     /**
-     * Initialize the {@code possiblePos} array.
-     */
-    private void initializePossiblePos() {
-        possiblePos.clear();
-    }
-
-    /**
-     * A method to calculate the positions where a Pawn can move
-     * @param x x coordinate
-     * @param y y coordinate
-     * @param color current player color
+     * A method to calculate the positions where a Pawn can move.
+     *
+     * @param x The x-coordinate of the piece.
+     * @param y The y-coordinate of the piece.
+     * @param color The player's color.
      */
     private void generatePawnPosition(int x, int y, PlayerColor color) {
+        if (x == 7 || x == 0) return;
         if (color == PlayerColor.black) {
             if (x < 7 && isEmptySpace(x + 1, y)) {
                 possiblePos.add(new PossiblePosition(x + 1, y));
@@ -329,10 +407,11 @@ public class ChessBoard {
     }
 
     /**
-     * A method to calculate the positions where a Knight can move
-     * @param x x coordinate
-     * @param y y coordinate
-     * @param color current player color
+     * A method to calculate the positions where a Knight can move.
+     *
+     * @param x The x-coordinate of the piece.
+     * @param y The y-coordinate of the piece.
+     * @param color The player's color.
      */
     private void generateKnightPosition(int x, int y, PlayerColor color) {
         int[][] positions = {{ -2, -1 }, { -2, 1 }, { 2, -1 }, { 2, 1 },
@@ -341,41 +420,42 @@ public class ChessBoard {
     }
 
     /**
-     * A method to calculate the positions where a Rook can move
-     * @param x x coordinate
-     * @param y y coordinate
-     * @param color current player color
+     * A method to calculate the positions where a Rook can move.
+     *
+     * @param x The x-coordinate of the piece.
+     * @param y The y-coordinate of the piece.
+     * @param color The player's color.
      */
-    private void generateRookPosition(int x, int y, PlayerColor color) {
-        _generateVerticalHorizontalPosition(x, y, color);
-    }
+    private
+      void generateRookPosition(int x, int y, PlayerColor color) { _generateHorizontalVerticalPosition(x, y, color); }
 
     /**
-     * A method to calculate the positions where a Bishop can move
-     * @param x x coordinate
-     * @param y y coordinate
-     * @param color current player color
+     * A method to calculate the positions where a Bishop can move.
+     *
+     * @param x The x-coordinate of the piece.
+     * @param y The y-coordinate of the piece.
+     * @param color The player's color.
      */
-    private void generateBishopPosition(int x, int y, PlayerColor color) {
-        _generateDiagonalPosition(x, y, color);
-    }
+    private
+      void generateBishopPosition(int x, int y, PlayerColor color) { _generateDiagonalPosition(x, y, color); }
 
     /**
-     * A method to calculate the positions where a Queen can move
-     * @param x x coordinate
-     * @param y y coordinate
-     * @param color current player color
+     * A method to calculate the positions where a Queen can move.
+     * @param x The x-coordinate of the piece.
+     * @param y The y-coordinate of the piece.
+     * @param color The player's color.
      */
     private void generateQueenPosition(int x, int y, PlayerColor color) {
-        _generateVerticalHorizontalPosition(x, y, color);
+        _generateHorizontalVerticalPosition(x, y, color);
         _generateDiagonalPosition(x, y, color);
     }
 
     /**
-     * A method to calculate the positions where a King can move
-     * @param x x coordinate
-     * @param y y coordinate
-     * @param color current player color
+     * A method to calculate the positions where a King can move.
+     *
+     * @param x The x-coordinate of the piece.
+     * @param y The y-coordinate of the piece.
+     * @param color The player's color.
      */
     private void generateKingPosition(int x, int y, PlayerColor color) {
         int[][] positions = {{ -1, -1 }, { -1, 0 }, { -1, 1 }, { 0, 1 },
@@ -385,10 +465,11 @@ public class ChessBoard {
 
     /**
      * It calculates the movable positions based on predefined coordinate values.
-     * @param x x coordinate
-     * @param y y coordinate
-     * @param color current player color
-     * @param predefinedPositions Predefined movement positions of a specific piece
+     *
+     * @param x The x-coordinate of the piece.
+     * @param y The y-coordinate of the piece.
+     * @param color The player's color.
+     * @param predefinedPositions Predefined movement positions of a specific piece.
      */
     private void _generatePositions(int x, int y, PlayerColor color, int[][] predefinedPositions) {
         for (int[] pos : predefinedPositions) {
@@ -398,43 +479,59 @@ public class ChessBoard {
                 possiblePos.add(new PossiblePosition(posX, posY));
         }
     }
+
+    /**
+     * Generates all possible diagonal positions from the given coordinates.
+     *
+     * @param x The x-coordinate of the starting position.
+     * @param y y-coordinate of the starting position.
+     * @param color The color of the piece.
+     */
     private void _generateDiagonalPosition(int x, int y, PlayerColor color) {
         for (int i = 1; i < 8; i++) {
-            if (isValidPosition(x + i, y + i) && !isExist(x + i, y + i, color)) {
+            if (isValidPosition(x + i, y + i) && isOpponentPiece(x + i, y + i, color)) {
                 possiblePos.add(new PossiblePosition(x + i, y + i));
                 if (isEnemyExist(x + i, y + i, color)) break;
             }
             else break;
         }
         for (int i = 1; i < 8; i++) {
-            if (isValidPosition(x + i, y - i) && !isExist(x + i, y - i, color)) {
+            if (isValidPosition(x + i, y - i) && isOpponentPiece(x + i, y - i, color)) {
                 possiblePos.add(new PossiblePosition(x + i, y - i));
                 if (isEnemyExist(x + i, y - i, color)) break;
             }
             else break;
         }
         for (int i = 1; i < 8; i++) {
-            if (isValidPosition(x - i, y + i) && !isExist(x - i, y + i, color)) {
+            if (isValidPosition(x - i, y + i) && isOpponentPiece(x - i, y + i, color)) {
                 possiblePos.add(new PossiblePosition(x - i, y + i));
                 if (isEnemyExist(x - i, y + i, color)) break;
             }
             else break;
         }
         for (int i = 1; i < 8; i++) {
-            if (isValidPosition(x - i, y - i) && !isExist(x - i, y - i, color)) {
+            if (isValidPosition(x - i, y - i) && isOpponentPiece(x - i, y - i, color)) {
                 possiblePos.add(new PossiblePosition(x - i, y - i));
                 if (isEnemyExist(x - i, y - i, color)) break;
             }
             else break;
         }
     }
-    private void _generateVerticalHorizontalPosition(int x, int y, PlayerColor color) {
+
+    /**
+     * Generates all possible horizontal and vertical positions from the given coordinates.
+     *
+     * @param x The x-coordinate of the starting position.
+     * @param y The y-coordinate of the starting position.
+     * @param color The color of the piece.
+     */
+    private void _generateHorizontalVerticalPosition(int x, int y, PlayerColor color) {
         for (int i = 0; i < 8; i++) {
-            if (i != x && isPathClear(x, y, i, y) && !isExist(i, y, color))
+            if (i != x && isPathClear(x, y, i, y) && isOpponentPiece(i, y, color))
                 possiblePos.add(new PossiblePosition(i, y));
         }
         for (int i = 0; i < 8; i++) {
-            if (i != y && isPathClear(x, y, x, i) && !isExist(x, i, color))
+            if (i != y && isPathClear(x, y, x, i) && isOpponentPiece(x, i, color))
                 possiblePos.add(new PossiblePosition(x, i));
         }
     }
@@ -454,8 +551,9 @@ public class ChessBoard {
 
     /**
      * Calculate the possible positions for the selected chess piece to move.
-     * @param from_x x position
-     * @param from_y y position
+     *
+     * @param from_x The x-coordinate of the starting position.
+     * @param from_y The y-coordinate of the starting position.
      */
     public void calculatePossibleMovablePosition(int from_x, int from_y) {
         Piece curr = chessBoardStatus[from_y][from_x];
@@ -487,48 +585,8 @@ public class ChessBoard {
         __print_possible_pos();
     }
 
-    // ==================== DEV-specific class members ====================
-    private static final String ANSI_RESET = "\u001B[0m";
-    public static final String ANSI_RED = "\u001B[31m";
-    public static final String ANSI_YELLOW = "\u001B[33m";
-    public static final String ANSI_GREEN = "\u001B[32m";
-
-
-    // ==================== DEV-specific class methods ====================
-    /**
-     * Logging a messages to the console if the {@code IS_DEBUG} flag
-     * is defined as {@code true}.
-     * @param format
-     *        Equivalent to the {@code format} parameter of {@code System.out.printf}.
-     * @param args
-     *        Equivalent to the {@code args} parameter of {@code System.out.printf}.
-     */
-    private void __LOG(final String format, Object... args) {
-        if (IS_DEBUG) System.out.printf(format, args);
-    }
-    private String __simplify(PlayerColor color, PieceType type) {
-        if (Objects.equals(type.toString(), "none")) return "X";
-        String C = color.toString().substring(0, 1).toUpperCase();
-        return C + "-" + type;
-    }
-    private void __print_board() {
-        for (int x = 0; x < 8; x++) {
-            for (int y = 0; y < 8; y++) {
-                Piece curr = getIcon(x, y);
-                __LOG("%-9s", __simplify(curr.color, curr.type));
-            }
-            __LOG("\n");
-        }
-        __LOG("\n");
-    }
-
-    public void __print_possible_pos() {
-        __LOG(ANSI_YELLOW + "Available move pos:\n" + ANSI_RESET);
-        for (PossiblePosition pos : possiblePos) {
-            __LOG("(%d, %d) ", pos.x, pos.y);
-        }
-        __LOG("\n\n");
-    }
+    private
+      String getTurnStr() { return TURN == PlayerColor.black ? "BLACK" : "WHITE"; }
 
     class ButtonListener implements ActionListener{
         int x;
@@ -537,17 +595,24 @@ public class ChessBoard {
             this.x = x;
             this.y = y;
         }
-        public void actionPerformed(ActionEvent e) {	// Only modify here
+        public void actionPerformed(ActionEvent e) {  // Only modify here
+            if (end) return;
             __LOG(ANSI_YELLOW + "Board Clicked - x: %d, y: %d\n" + ANSI_RESET, x, y);
 
             if (isClickMarked(x, y)) {
                 movePiece(selX, selY, x, y);
+                __print_board();
                 removeAllMarks();
+                if (end) {
+                    String currentTurn = getTurnStr();
+                    setStatus(currentTurn + "'s WIN!");
+                    return;
+                }
                 swapTurn();
                 calculateCheck(x, y, TURN);
                 if (check) {
-                    String turn = TURN == PlayerColor.black ? "BLACK" : "WHITE";
-                    setStatus(turn + "'s TURN / CHECK");
+                    String currentTurn = getTurnStr();
+                    setStatus(currentTurn + "'s TURN / CHECK");
                 }
                 return;
             }
@@ -555,7 +620,7 @@ public class ChessBoard {
             removeAllMarks();
 
             // (x, y) is where the click event occurred
-            if (getIcon(x, y).type != PieceType.none && TURN == getIcon(x, y).color) {
+            if (!isEmptySpace(x, y) && TURN == getIcon(x, y).color) {
                 selX = x;
                 selY = y;
                 calculatePossibleMovablePosition(x, y);
@@ -584,9 +649,7 @@ public class ChessBoard {
     /**
      *
      */
-    void calculateCheckmate() {
-
-    }
+    void calculateCheckmate() {}
 
     boolean isClickMarked(int x, int y) {
         for (PossiblePosition pos : possiblePos) {
@@ -611,6 +674,8 @@ public class ChessBoard {
     void onInitiateBoard(){
         __LOG(ANSI_GREEN + "===== GAME START =====\n\n" + ANSI_RESET);
         __print_board();
+        end = false;
+        check = false;
         initializeTurn();
     }
 
@@ -622,7 +687,7 @@ public class ChessBoard {
     /**
      * Swap user's turn and display messages according current state
      */
-    private void swapTurn() {
+    protected void swapTurn() {
         if (TURN == PlayerColor.black) {
             TURN = PlayerColor.white;
             setStatus("WHITE's TURN");
@@ -631,9 +696,11 @@ public class ChessBoard {
         }
     }
 
-    private void movePiece(int from_x, int from_y, int to_x, int to_y) {
+    protected void movePiece(int from_x, int from_y, int to_x, int to_y) {
         // Modify chess board status
         Piece temp = getIcon(from_x, from_y);
+        if (getIcon(to_x, to_y).type == PieceType.king && getIcon(to_x, to_y).color != TURN)
+            end = true;
         chessBoardStatus[to_y][to_x] = chessBoardStatus[from_y][from_x];
         chessBoardStatus[from_y][from_x] = new Piece();
         // Moving icons

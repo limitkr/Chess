@@ -88,6 +88,20 @@ class ChessBoardTest {
         chessboard.calculatePossibleMovablePosition(1, 2);
         Assertions.assertEquals("(2, 2)", __TEST_LOG(chessboard.__get_possible_pos()));
         chessboard.__clear_possible_pos();
+
+        String[][] case4 = {{ " ", " ", " ", " ", " ", " ", " ", " " },
+                            { " ", " ", " ", " ", " ", " ", " ", " " },
+                            { " ", " ", " ", " ", " ", " ", " ", " " },
+                            { " ", " ", " ", " ", " ", " ", " ", " " },
+                            { " ", " ", " ", " ", " ", " ", " ", " " },
+                            { " ", " ", " ", " ", " ", " ", " ", " " },
+                            { " ", " ", " ", " ", " ", " ", " ", " " },
+                            { " ", " ", "♟", " ", " ", " ", " ", " " }};
+        chessboard.__generate_custom_board(case4);
+
+        chessboard.calculatePossibleMovablePosition(7, 2);
+        Assertions.assertEquals("", __TEST_LOG(chessboard.__get_possible_pos()));
+        chessboard.__clear_possible_pos();
     }
 
     @org.junit.jupiter.api.Test
@@ -447,7 +461,7 @@ class ChessBoardTest {
     }
 
     @org.junit.jupiter.api.Test
-    void checkmateTest() {
+    void checkTest() {
         ChessBoard.IS_DEBUG = false;
         String[][] case1 = {{" ", " ", " ", " ", " ", " ", " ", " "},
                             {" ", " ", " ", " ", " ", " ", " ", " "},
@@ -463,5 +477,33 @@ class ChessBoardTest {
 
         chessboard.calculateCheck(5, 3, PlayerColor.white);
         Assertions.assertFalse(chessboard.__get_check_status());
+
+        String[][] case2 = {{"♜", "♞", "♝", "♛", "♚", "♝", "♞", "♜"},
+                            {"♟", "♟", " ", " ", "♟", "♟", "♟", "♟"},
+                            {" ", " ", " ", "♟", " ", " ", " ", " "},
+                            {" ", "♗", "♟", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", "♙", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", "♘", " ", " "},
+                            {"♙", "♙", "♙", "♙", " ", "♙", "♙", "♙"},
+                            {"♖", "♘", "♗", "♕", "♔", " ", " ", "♖"}};
+        chessboard.__generate_custom_board(case2);
+        chessboard.calculateCheck(3, 1, PlayerColor.black);
+        Assertions.assertTrue(chessboard.__get_check_status());
+    }
+
+    @org.junit.jupiter.api.Test
+    void endTest() {
+        ChessBoard.IS_DEBUG = false;
+        String[][] case1 = {{"♜", "♞", "♝", "♛", "♚", "♝", "♞", "♜"},
+                            {"♟", "♟", " ", " ", "♟", "♟", "♟", "♟"},
+                            {" ", " ", " ", "♟", " ", " ", " ", " "},
+                            {" ", "♗", "♟", " ", " ", " ", " ", " "},
+                            {" ", " ", " ", " ", "♙", " ", " ", " "},
+                            {" ", " ", " ", " ", " ", "♘", " ", " "},
+                            {"♙", "♙", "♙", "♙", " ", "♙", "♙", "♙"},
+                            {"♖", "♘", "♗", "♕", "♔", " ", " ", "♖"}};
+        chessboard.__generate_custom_board(case1);
+        chessboard.movePiece(3, 1, 0, 4);
+        Assertions.assertTrue(chessboard.__get_end_status());
     }
 }
