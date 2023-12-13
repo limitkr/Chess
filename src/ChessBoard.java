@@ -309,6 +309,7 @@ public class ChessBoard {
      * @param color current player color
      */
     private void generatePawnPosition(int x, int y, PlayerColor color) {
+        if (x == 7 || x == 0) return;
         if (color == PlayerColor.black) {
             if (x < 7 && isEmptySpace(x + 1, y)) {
                 possiblePos.add(new PossiblePosition(x + 1, y));
@@ -402,6 +403,7 @@ public class ChessBoard {
                 possiblePos.add(new PossiblePosition(posX, posY));
         }
     }
+
     private void _generateDiagonalPosition(int x, int y, PlayerColor color) {
         for (int i = 1; i < 8; i++) {
             if (isValidPosition(x + i, y + i) && !isExist(x + i, y + i, color)) {
@@ -432,6 +434,7 @@ public class ChessBoard {
             else break;
         }
     }
+
     private void _generateVerticalHorizontalPosition(int x, int y, PlayerColor color) {
         for (int i = 0; i < 8; i++) {
             if (i != x && isPathClear(x, y, i, y) && !isExist(i, y, color))
@@ -549,7 +552,13 @@ public class ChessBoard {
 
             if (isClickMarked(x, y)) {
                 movePiece(selX, selY, x, y);
+                __print_board();
                 removeAllMarks();
+                if (end) {
+                    String currentTurn = TURN == PlayerColor.black ? "BLACK" : "WHITE";
+                    setStatus(currentTurn + "'s WIN!");
+                    return;
+                }
                 swapTurn();
                 calculateCheck(x, y, TURN);
                 if (check) {
@@ -616,6 +625,8 @@ public class ChessBoard {
     void onInitiateBoard(){
         __LOG(ANSI_GREEN + "===== GAME START =====\n\n" + ANSI_RESET);
         __print_board();
+        end = false;
+        check = false;
         initializeTurn();
     }
 
@@ -639,11 +650,8 @@ public class ChessBoard {
     protected void movePiece(int from_x, int from_y, int to_x, int to_y) {
         // Modify chess board status
         Piece temp = getIcon(from_x, from_y);
-        if (getIcon(to_x, to_y).type == PieceType.king && getIcon(to_x, to_y).color != TURN) {
+        if (getIcon(to_x, to_y).type == PieceType.king && getIcon(to_x, to_y).color != TURN)
             end = true;
-            String currentTurn = TURN == PlayerColor.black ? "BLACK" : "WHITE";
-            setStatus(currentTurn + "WIN!");
-        }
         chessBoardStatus[to_y][to_x] = chessBoardStatus[from_y][from_x];
         chessBoardStatus[from_y][from_x] = new Piece();
         // Moving icons

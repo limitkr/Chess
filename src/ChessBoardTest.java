@@ -88,6 +88,20 @@ class ChessBoardTest {
         chessboard.calculatePossibleMovablePosition(1, 2);
         Assertions.assertEquals("(2, 2)", __TEST_LOG(chessboard.__get_possible_pos()));
         chessboard.__clear_possible_pos();
+
+        String[][] case4 = {{ " ", " ", " ", " ", " ", " ", " ", " " },
+                            { " ", " ", " ", " ", " ", " ", " ", " " },
+                            { " ", " ", " ", " ", " ", " ", " ", " " },
+                            { " ", " ", " ", " ", " ", " ", " ", " " },
+                            { " ", " ", " ", " ", " ", " ", " ", " " },
+                            { " ", " ", " ", " ", " ", " ", " ", " " },
+                            { " ", " ", " ", " ", " ", " ", " ", " " },
+                            { " ", " ", "♟", " ", " ", " ", " ", " " }};
+        chessboard.__generate_custom_board(case4);
+
+        chessboard.calculatePossibleMovablePosition(7, 2);
+        Assertions.assertEquals("", __TEST_LOG(chessboard.__get_possible_pos()));
+        chessboard.__clear_possible_pos();
     }
 
     @org.junit.jupiter.api.Test
